@@ -8,9 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Clone and copy commits
-      - run: git config --global user.email "${{ secrets.EMAIL }}"
-      - run: git config --global user.name "${{ secrets.USERNAME }}"
-      - run: node make-commits.js
+       run: git config --global user.email "${{ secrets.EMAIL }}" && git config --global user.name "${{ secrets.USERNAME }}" && node make-commits.js
         env:
           ORIGINAL_REPO_URL: ${{ secrets.ORIGINAL_REPO_URL }}
           EMAIL: ${{ secrets.EMAIL }}
