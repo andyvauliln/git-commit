@@ -1,11 +1,15 @@
 const simpleGit = require("simple-git/promise");
 const fs = require("fs");
 
-async function cloneAndCopyCommits(originalRepoUrl, newRepoPath, username, password) {
+async function cloneAndCopyCommits(username, token) {
+    // Get the original repository URL and the new repository path from environment variables
+    const originalRepoUrl = process.env.ORIGINAL_REPO_URL;
+    const newRepoPath = process.env.NEW_REPO_PATH;
+
     // Clone the original repository
     await simpleGit().clone(originalRepoUrl, newRepoPath, {
         username: username,
-        password: password,
+        password: token,
     });
 
     // Open the new repository
@@ -14,13 +18,13 @@ async function cloneAndCopyCommits(originalRepoUrl, newRepoPath, username, passw
     // Get the list of commits in the original repository
     const commits = await simpleGit().log({
         username: username,
-        password: password,
+        password: token,
     });
 
-    // Check if the progress file exists
-    if (fs.existsSync("./new_repo/progress.json")) {
-        // Read the progress file
-        const progress = JSON.parse(fs.readFileSync("./new_repo/progress.json"));
+  // Check if the progress file exists
+    if (fs.existsSync("./progress.json")) {
+    // Read the progress file
+        const progress = JSON.parse(fs.readFileSync("./progress.json"));
 
         // Set the starting index for the commits
         let i = progress.index;
@@ -47,14 +51,14 @@ async function cloneAndCopyCommits(originalRepoUrl, newRepoPath, username, passw
         if (i % 2 == 0) {
             // Save the progress
             fs.writeFileSync(
-                "./new_repo/progress.json",
+                "./progress.json",
                 JSON.stringify({ index: i })
             );
 
             // Push the new repository to a remote
             await newRepo.push("origin", "master", {
                 username: username,
-                password: password,
+                password: token,
             });
 
             // Break the loop
@@ -65,8 +69,6 @@ async function cloneAndCopyCommits(originalRepoUrl, newRepoPath, username, passw
 
 // Clone and copy the commits from the original repository to the new repository
 cloneAndCopyCommits(
-    "https://github.com/Aadarsh805/TweetSage",
-    "./new_repo",
-    "your_username",
-    "your_password"
+    process.env.USERNAME,
+    process.env.TOKEN
 );

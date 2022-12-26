@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Clone and copy commits
-        run: node clone_and_copy_commits.js
+        run: node make-commits.js
         env:
           ORIGINAL_REPO_URL: ${{ secrets.ORIGINAL_REPO_URL }}
           NEW_REPO_PATH: ${{ secrets.NEW_REPO_PATH }}
