@@ -1,74 +1,149 @@
 const simpleGit = require("simple-git");
 const fs = require("fs");
+const dotenv = require('dotenv');
+const path = require("path");
 
-async function cloneAndCopyCommits(username, token) {
-    // Get the original repository URL and the new repository path from environment variables
-    const originalRepoUrl = process.env.ORIGINAL_REPO_URL;
-    const newRepoPath = process.env.NEW_REPO_PATH;
+dotenv.config();
 
-    // Clone the original repository
-    await simpleGit().clone(originalRepoUrl, newRepoPath, {
-        username: username,
-        password: token,
-    });
+async function cloneAndCopyCommits(username, password, originalRepoUrl, targetRepoUrl) {
+    console.log("Cloning and copying commits...", username, password, originalRepoUrl, targetRepoUrl);
 
-    // Open the new repository
-    const newRepo = simpleGit(newRepoPath);
+    await simpleGit().clone(originalRepoUrl, "./orginial-repo");
+    const orginialRepo = simpleGit("./orginial-repo");
+    const commitsOrinial = await simpleGit("./orginial-repo").log();
+    console.log("cloned original repo")
 
-    // Get the list of commits in the original repository
-    const commits = await simpleGit().log({
-        username: username,
-        password: token,
-    });
+    const remote = `https://${username}:${password}@${targetRepoUrl}`;
+    await simpleGit().clone(remote, "./target-repo");
+    const targetRepo = simpleGit("./target-repo");
+    console.log("cloned target repo")
 
-  // Check if the progress file exists
-    if (fs.existsSync("./progress.json")) {
+    let j = 0;
+    if (fs.existsSync("./target-repo/progress.json")) {
     // Read the progress file
-        const progress = JSON.parse(fs.readFileSync("./progress.json"));
-
+        const progress = JSON.parse(fs.readFileSync("./target-repo/progress.json"));
+        console.log("progress readded from file", progress.index);
         // Set the starting index for the commits
-        let i = progress.index;
-    } else {
-        // Set the starting index for the commits to 0
-        let i = 0;
+        let j = progress.index;
+    } 
+    const commits = commitsOrinial.all.reverse();
+    for (let i = j; i < j + 2 && i < commits.length; i++) {
+
+        console.log("getting commit number: ", i, commits[i].message);
+
+        await orginialRepo.commit(commits[i].message);
+
+        await deleteFolderRecursive("./target-repo");
+
+        console.log("deleted files in target repo");
+
+        copyRecursiveSync("./orginial-repo", "./target-repo");
+        console.log("copied files from original repo to target repo");
+        fs.writeFileSync(
+            "./target-repo/progress.json",
+            JSON.stringify({ index: j + 1 })
+        );
+        console.log("wrote progress file")
+        simpleGit("./target-repo")
+            .addConfig("user.name", username)
+            .addConfig("user.email", "andy.vaulin@gmail.com")
+            .addRemote('origin', remote)
+            .add('./*')
+            .commit(commits[i].message)
+            .push("-u", "origin", "main");
+
+        console.log("pushed commit to target repo");
     }
 
-    // Iterate through the commits
-    while (i < commits.all.length) {
-        // Checkout the commit
-        await newRepo.checkout(commits.all[i].hash);
-
-        // Add all the files in the commit
-        await newRepo.add(".");
-
-        // Create a new commit in the new repository
-        await newRepo.commit(commits.all[i].message);
-
-        // Increment the index
-        i++;
-
-        // Check if we have reached the limit of two commits per day
-        if (i % 2 == 0) {
-            // Save the progress
-            fs.writeFileSync(
-                "./progress.json",
-                JSON.stringify({ index: i })
-            );
-
-            // Push the new repository to a remote
-            await newRepo.push("origin", "master", {
-                username: username,
-                password: token,
-            });
-
-            // Break the loop
-            break;
-        }
-    }
 }
 
 // Clone and copy the commits from the original repository to the new repository
 cloneAndCopyCommits(
     process.env.USERNAME,
-    process.env.TOKEN
+    process.env.PASSWORD,
+    process.env.ORIGINAL_REPO_URL,
+    process.env.TARGET_REPO_URL
 );
+
+var copyRecursiveSync = function (src, dest) {
+    var exists = fs.existsSync(src);
+    var stats = exists && fs.statSync(src);
+    var isDirectory = exists && stats.isDirectory();
+    if (isDirectory) {
+        if (dest !== "./target-repo") {
+            fs.mkdirSync(dest);
+        }
+
+        fs.readdirSync(src).forEach(function (childItemName) {
+            if (childItemName !== ".git") {
+                copyRecursiveSync(path.join(src, childItemName),
+                    path.join(dest, childItemName));
+            }
+        });
+    } else {
+        fs.copyFileSync(src, dest);
+    }
+};
+
+// const deleteFolderRecursive = async function (directory) {
+//     for (const file of await fs.promises.readdir(directory)) {
+//         if (file !== ".git") {
+//             await fs.promises.unlink(path.join(directory, file));
+//         }
+
+//     }
+// };
+
+var deleteFolderRecursive = function (dir) {
+    if (fs.existsSync(dir)) {
+        fs.readdirSync(dir).forEach(function (file) {
+            var curdir = dir + "/" + file;
+            if (fs.lstatSync(curdir).isDirectory()) { // recurse
+                deleteFolderRecursive(curdir);
+            } else { // delete file
+                fs.unlinkSync(curdir);
+            }
+        });
+        if (dir !== "./target-repo" && dir.indexOf(".git") === -1) {
+            fs.rmdirSync(dir);
+        }
+
+    }
+};
+
+// function copyFileSync(source, target) {
+
+//     var targetFile = target;
+
+//     // If target is a directory, a new file with the same name will be created
+//     if (fs.existsSync(target)) {
+//         if (fs.lstatSync(target).isDirectory()) {
+//             targetFile = path.join(target, path.basename(source));
+//         }
+//     }
+
+//     fs.writeFileSync(targetFile, fs.readFileSync(source));
+// }
+
+// function copyFolderRecursiveSync(source, target) {
+//     var files = [];
+
+//     // Check if folder needs to be created or integrated
+//     var targetFolder = path.join(target, path.basename(source));
+//     if (!fs.existsSync(targetFolder)) {
+//         fs.mkdirSync(targetFolder);
+//     }
+
+//     // Copy
+//     if (fs.lstatSync(source).isDirectory()) {
+//         files = fs.readdirSync(source);
+//         files.forEach(function (file) {
+//             var curSource = path.join(source, file);
+//             if (fs.lstatSync(curSource).isDirectory() && file !== ".git") {
+//                 copyFolderRecursiveSync(curSource, targetFolder);
+//             } else {
+//                 copyFileSync(curSource, targetFolder);
+//             }
+//         });
+//     }
+// }
