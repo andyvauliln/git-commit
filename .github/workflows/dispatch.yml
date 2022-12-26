@@ -1,0 +1,16 @@
+name: Daily commit
+
+on: [workflow_dispatch]
+
+jobs:
+  clone_and_copy_commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Clone and copy commits
+        run: node make-commits.js
+        env:
+          ORIGINAL_REPO_URL: ${{ secrets.ORIGINAL_REPO_URL }}
+          NEW_REPO_PATH: ${{ secrets.NEW_REPO_PATH }}
+          USERNAME: ${{ secrets.USERNAME }}
+          PASSWORD: ${{ secrets.TOKEN }}
