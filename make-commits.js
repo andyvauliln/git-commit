@@ -24,11 +24,10 @@ async function cloneAndCopyCommits(username, email, token, originalRepoUrl, targ
         const progress = JSON.parse(fs.readFileSync("./target-repo/progress.json"));
         console.log("progress readded from file", progress.index);
         // Set the starting index for the commits
-        let j = progress.index;
+        j = progress.index;
     }
     const commits = commitsOrinial.all.reverse();
     for (let i = j; i < j + 2 && i < commits.length; i++) {
-
         console.log("getting commit number: ", i, commits[i].message);
 
         await orginialRepo.commit(commits[i].message);
