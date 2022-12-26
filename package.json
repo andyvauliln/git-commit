@@ -1,0 +1,14 @@
+{
+  "name": "git-commit",
+  "version": "1.0.0",
+  "description": "makes commit every day ",
+  "main": "make-commits.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "simple-git": "^3.15.1"
+  }
+}
