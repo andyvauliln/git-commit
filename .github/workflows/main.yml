@@ -13,6 +13,7 @@ jobs:
         run: node make-commits.js
         env:
           ORIGINAL_REPO_URL: ${{ secrets.ORIGINAL_REPO_URL }}
-          NEW_REPO_PATH: ${{ secrets.NEW_REPO_PATH }}
+          EMAIL: ${{ secrets.EMAIL }}
           USERNAME: ${{ secrets.USERNAME }}
-          PASSWORD: ${{ secrets.TOKEN }}
+          TOKEN: ${{ secrets.TOKEN }}
+          TARGET_REPO_URL: ${{ secrets.TARGET_REPO_URL }}
