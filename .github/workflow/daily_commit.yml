@@ -15,4 +15,4 @@ jobs:
           ORIGINAL_REPO_URL: ${{ secrets.ORIGINAL_REPO_URL }}
           NEW_REPO_PATH: ${{ secrets.NEW_REPO_PATH }}
           USERNAME: ${{ secrets.USERNAME }}
-          PASSWORD: ${{ secrets.PASSWORD }}
+          PASSWORD: ${{ secrets.TOKEN }}
