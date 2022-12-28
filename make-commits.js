@@ -7,7 +7,6 @@ const path = require("path");
 dotenv.config();
 
 async function cloneAndCopyCommits(commitsAcmount, username, email, token, originalRepoUrl, targetRepoUrl) {
-    console.log(commitsAcmount)
     await simpleGit().clone(originalRepoUrl, "./orginial-repo");
     const orginialRepo = simpleGit("./orginial-repo");
     const commitsOrinial = await simpleGit("./orginial-repo").log();
