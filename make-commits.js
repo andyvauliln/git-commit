@@ -7,26 +7,27 @@ const path = require("path");
 dotenv.config();
 
 async function cloneAndCopyCommits(commitsAcmount, username, email, token, originalRepoUrl, targetRepoUrl) {
-    await simpleGit().clone(originalRepoUrl, "./orginial-repo");
-    const orginialRepo = simpleGit("./orginial-repo");
-    const commitsOrinial = await simpleGit("./orginial-repo").log();
+    await simpleGit().clone(originalRepoUrl, "./orginal-repository");
+    const orginialRepo = simpleGit("./orginal-repository");
+    const commitsOrinial = await simpleGit("./orginal-repository").log();
     console.log("cloned original repo")
 
     const remote = `https://${token}@${targetRepoUrl}`;
-    await simpleGit().clone(remote, "./target-repo");
-    const targetRepo = simpleGit("./target-repo");
+    await simpleGit().clone(remote, "./target-repository");
+    const targetRepo = simpleGit("./target-repository");
     console.log("cloned target repo")
 
 
     let j = 0;
-    if (fs.existsSync("./target-repo/progress.json")) {
+    if (fs.existsSync("./target-repository/progress.json")) {
         // Read the progress file
-        const progress = JSON.parse(fs.readFileSync("./target-repo/progress.json"));
+        const progress = JSON.parse(fs.readFileSync("./target-repository/progress.json"));
         console.log("progress readded from file", progress.index);
         // Set the starting index for the commits
         j = progress.index;
     }
     const commits = commitsOrinial.all.reverse();
+    console.log("commits length", commits.length, j, commitsAcmount);
     for (let i = j; i < j + commitsAcmount && i < commits.length; i++) {
         console.log("getting commit number: ", i, commits[i].message);
         console.log(commits[i].message.indexOf("Merge pull request"), "is merge");
@@ -36,14 +37,14 @@ async function cloneAndCopyCommits(commitsAcmount, username, email, token, origi
 
         await orginialRepo.checkout(commits[i].hash);
 
-        await deleteFolderRecursive("./target-repo");
+        await deleteFolderRecursive("./target-repository");
 
         console.log("deleted files in target repo");
 
-        copyRecursiveSync("./orginial-repo", "./target-repo");
+        copyRecursiveSync("./orginal-repository", "./target-repository");
         console.log("copied files from original repo to target repo");
         fs.writeFileSync(
-            "./target-repo/progress.json",
+            "./target-repository/progress.json",
             JSON.stringify({ index: i + 1 })
         );
         console.log("wrote progress file")
@@ -74,7 +75,7 @@ var copyRecursiveSync = function (src, dest) {
     var stats = exists && fs.statSync(src);
     var isDirectory = exists && stats.isDirectory();
     if (isDirectory) {
-        if (dest !== "./target-repo") {
+        if (dest !== "./target-repository") {
             fs.mkdirSync(dest);
         }
 
@@ -99,7 +100,7 @@ var deleteFolderRecursive = function (dir) {
                 fs.unlinkSync(curdir);
             }
         });
-        if (dir !== "./target-repo") {
+        if (dir !== "./target-repository") {
             fs.rmdirSync(dir);
         }
 
