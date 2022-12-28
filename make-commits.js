@@ -1,12 +1,13 @@
 const simpleGit = require("simple-git");
 const fs = require("fs");
+const fsp = require("fs/promises");
 const dotenv = require('dotenv');
 const path = require("path");
 
 dotenv.config();
 
-async function cloneAndCopyCommits(username, email, token, originalRepoUrl, targetRepoUrl) {
-
+async function cloneAndCopyCommits(commitsAcmount, username, email, token, originalRepoUrl, targetRepoUrl) {
+    console.log(commitsAcmount)
     await simpleGit().clone(originalRepoUrl, "./orginial-repo");
     const orginialRepo = simpleGit("./orginial-repo");
     const commitsOrinial = await simpleGit("./orginial-repo").log();
@@ -27,10 +28,13 @@ async function cloneAndCopyCommits(username, email, token, originalRepoUrl, targ
         j = progress.index;
     }
     const commits = commitsOrinial.all.reverse();
-    for (let i = j; i < j + 2 && i < commits.length; i++) {
+    for (let i = j; i < j + commitsAcmount && i < commits.length; i++) {
         console.log("getting commit number: ", i, commits[i].message);
+        if (commits[i].message.indexOf("Merge pull request" >= 0)) {
+            continue;
+        }
 
-        await orginialRepo.commit(commits[i].message);
+        await orginialRepo.checkout(commits[i].hash);
 
         await deleteFolderRecursive("./target-repo");
 
@@ -40,11 +44,9 @@ async function cloneAndCopyCommits(username, email, token, originalRepoUrl, targ
         console.log("copied files from original repo to target repo");
         fs.writeFileSync(
             "./target-repo/progress.json",
-            JSON.stringify({ index: j + 1 })
+            JSON.stringify({ index: i + 1 })
         );
         console.log("wrote progress file")
-        const remotes = await targetRepo.getRemotes(true);
-        console.log("got remotes", remotes);
         await targetRepo
             .addConfig("user.name", username)
             .addConfig("user.email", email)
@@ -57,8 +59,9 @@ async function cloneAndCopyCommits(username, email, token, originalRepoUrl, targ
 
 }
 
-// Clone and copy the commits from the original repository to the new repository
+
 cloneAndCopyCommits(
+    parseInt(process.env.COMMITS),
     process.env.USERNAME,
     process.env.EMAIL,
     process.env.TOKEN,
