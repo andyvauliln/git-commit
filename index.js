@@ -27,10 +27,8 @@ async function cloneAndCopyCommits(commitsAcmount, username, email, token, origi
         j = progress.index;
     }
     const commits = commitsOrinial.all.reverse();
-    console.log("commits length", commits.length, j, commitsAcmount);
     for (let i = j; i < j + commitsAcmount && i < commits.length; i++) {
         console.log("getting commit number: ", i, commits[i].message);
-        console.log(commits[i].message.indexOf("Merge pull request"), "is merge");
         if (commits[i].message.indexOf("Merge pull request") >= 0) {
             continue;
         }

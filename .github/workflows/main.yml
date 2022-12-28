@@ -9,11 +9,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Clone and copy commits
-        run: git config --global user.email "${{ secrets.EMAIL }}" && git config --global user.name "${{ secrets.USERNAME }}" && node make-commits.js
+      - name: Run Script
+        run: git config --global user.email "${{ secrets.EMAIL }}" && git config --global user.name "${{ secrets.USERNAME }}" && node index.js
         env:
           ORIGINAL_REPO_URL: ${{ secrets.ORIGINAL_REPO_URL }}
           EMAIL: ${{ secrets.EMAIL }}
           USERNAME: ${{ secrets.USERNAME }}
           TOKEN: ${{ secrets.TOKEN }}
           TARGET_REPO_URL: ${{ secrets.TARGET_REPO_URL }}
+          COMMITS: ${{ secrets.COMMITS }}
